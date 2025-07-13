@@ -1,11 +1,9 @@
-import { Patient } from 'src/digital-health/entities/patient.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -25,12 +23,11 @@ export class Medication {
   @Column()
   frequency: string;
 
-  @ManyToOne(() => Assignment, (assignment) => assignment.medications)
+  @ManyToOne(() => Assignment, (assignment) => assignment.medications, {
+    nullable: true,
+  })
   @JoinColumn({ name: 'assignmentId' })
   assignment: Assignment;
-
-  @OneToMany(() => Patient, (patient) => patient.medications)
-  patients: Patient[];
 
   @CreateDateColumn()
   createdAt: Date;

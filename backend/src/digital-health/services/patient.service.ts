@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Patient } from '../entities/patient.entity';
 import { Repository } from 'typeorm';
+import { CreatePatientDto } from '../dtos/create-patient.dto';
+import { UpdatePatientDto } from '../dtos/update-patient.dto';
 
 @Injectable()
 export class PatientService {
@@ -12,25 +14,51 @@ export class PatientService {
 
   async findAll(): Promise<Patient[]> {
     return this.patientRepository.find({
-      relations: ['medications', 'assignment'],
+      relations: ['assignments'],
     });
   }
 
-  //   async findOne(id: number): Promise<Patient> {
-  //     return this.patientRepository.findOne(id, { relations: ['medications', 'assignment'] });
-  //   }
+  async findOne(id: number): Promise<Patient> {
+    const patient = await this.patientRepository.findOne({
+      where: { id },
+      relations: ['assignments'],
+    });
 
-  //   async create(patientData: CreatePatientDto): Promise<Patient> {
-  //     const patient = this.patientRepository.create(patientData);
-  //     return this.patientRepository.save(patient);
-  //   }
+    if (!patient) {
+      throw new NotFoundException(`Patient with ID ${id} not found`);
+    }
+    return patient;
+  }
 
-  //   async update(id: number, patientData: UpdatePatientDto): Promise<Patient> {
-  //     await this.patientRepository.update(id, patientData);
-  //     return this.findOne(id);
-  //   }
+  async create(patientData: CreatePatientDto): Promise<Patient> {
+    const patient = this.patientRepository.create({
+      ...patientData,
+      dateOfBirth: new Date(patientData.dateOfBirth),
+    });
+    return this.patientRepository.save(patient);
+  }
 
-  async remove(id: number): Promise<void> {
+  async update(id: number, patientData: UpdatePatientDto): Promise<Patient> {
+    const existingPatient = await this.patientRepository.findOne({
+      where: { id },
+    });
+
+    if (!existingPatient) {
+      throw new NotFoundException(`Patient with ID ${id} not found`);
+    }
+
+    const { name, dateOfBirth } = patientData;
+
+    if (name) {
+      existingPatient.name = name;
+    }
+    if (dateOfBirth) {
+      existingPatient.dateOfBirth = new Date(dateOfBirth);
+    }
+    return this.patientRepository.save(existingPatient);
+  }
+
+  async delete(id: number): Promise<void> {
     await this.patientRepository.delete(id);
   }
 }
