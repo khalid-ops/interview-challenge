@@ -7,6 +7,8 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu"
+import { Toaster } from "@/components/ui/sonner"
+
 
 const pages: { title: string; href: string; }[] = [
   {
@@ -63,6 +65,7 @@ export default function RootLayout({
         </div>
         </header>
           <main>{children}</main>
+          <Toaster />
         <footer></footer>
       </body>
     </html>

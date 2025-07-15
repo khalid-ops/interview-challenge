@@ -20,6 +20,11 @@ export class PatientController {
     return this.patientService.findAll();
   }
 
+  @Get('/with-treatment-details')
+  async findPatientsWithTreatmentDetails() {
+    return this.patientService.findPatientsWithTreatmentDetails();
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: number) {
     return this.patientService.findOne(id);

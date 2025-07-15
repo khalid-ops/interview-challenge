@@ -4,18 +4,48 @@ import { Patient } from '../entities/patient.entity';
 import { Repository } from 'typeorm';
 import { CreatePatientDto } from '../dtos/create-patient.dto';
 import { UpdatePatientDto } from '../dtos/update-patient.dto';
+import { AssignmentService } from './assignment.service';
 
 @Injectable()
 export class PatientService {
   constructor(
     @InjectRepository(Patient)
     private patientRepository: Repository<Patient>,
+    private assignmentService: AssignmentService,
   ) {}
 
   async findAll(): Promise<Patient[]> {
     return this.patientRepository.find({
-      relations: ['assignments'],
+      relations: ['assignments', 'assignments.medications'],
     });
+  }
+
+  async findPatientsWithTreatmentDetails(): Promise<Patient[]> {
+    const patients = await this.patientRepository.find({
+      relations: ['assignments', 'assignments.medications'],
+    });
+
+    const data = await Promise.all(
+      patients.map(async (patient) => {
+        return {
+          ...patient,
+          assignments: await Promise.all(
+            patient.assignments.map(async (assignment) => {
+              const treatmentDaysLeft =
+                await this.assignmentService.getRemainingTreatmentDays(
+                  assignment.id,
+                );
+              return {
+                ...assignment,
+                treatmentDaysLeft,
+              };
+            }),
+          ),
+        };
+      }),
+    );
+
+    return data;
   }
 
   async findOne(id: number): Promise<Patient> {

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assignment } from '../entities/assignment.entity';
 import { Repository } from 'typeorm';
@@ -13,15 +18,26 @@ export class AssignmentService {
   constructor(
     @InjectRepository(Assignment)
     private assignmentRepository: Repository<Assignment>,
+    @Inject(forwardRef(() => PatientService))
     private patientService: PatientService,
     @InjectRepository(Medication)
     private medicationRepository: Repository<Medication>,
   ) {}
 
   async findAll(): Promise<Assignment[]> {
-    return this.assignmentRepository.find({
+    const data = await this.assignmentRepository.find({
       relations: ['patient', 'medications'],
     });
+    return Promise.all(
+      data.map(async (assignment) => {
+        return {
+          ...assignment,
+          treatmentDaysLeft: await this.getRemainingTreatmentDays(
+            assignment.id,
+          ),
+        };
+      }),
+    );
   }
 
   async findOne(id: number): Promise<Assignment> {
