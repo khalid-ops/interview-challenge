@@ -16,14 +16,14 @@ export class MedicationService {
 
   async findAll(): Promise<Medication[]> {
     return this.medicationRepository.find({
-      relations: ['assignment'],
+      relations: ['assignments'],
     });
   }
 
   async findOne(id: number): Promise<Medication> {
     const medication = await this.medicationRepository.findOne({
       where: { id },
-      relations: ['assignment'],
+      relations: ['assignments'],
     });
     if (!medication) {
       throw new NotFoundException(`Medication with ID ${id} not found`);
@@ -33,12 +33,6 @@ export class MedicationService {
 
   async create(medicationData: CreateMedicationDto): Promise<Medication> {
     const medication = this.medicationRepository.create(medicationData);
-
-    if (medicationData.assignmentId) {
-      medication.assignment = await this.assignmentService.findOne(
-        medicationData.assignmentId,
-      );
-    }
     return this.medicationRepository.save(medication);
   }
 
@@ -48,7 +42,7 @@ export class MedicationService {
   ): Promise<Medication> {
     const existingMedication = await this.medicationRepository.findOne({
       where: { id },
-      relations: ['assignment'],
+      relations: ['assignments'],
     });
 
     if (!existingMedication) {
@@ -57,9 +51,6 @@ export class MedicationService {
 
     Object.assign(existingMedication, {
       ...medicationData,
-      assignment: medicationData.assignmentId
-        ? await this.assignmentService.findOne(medicationData.assignmentId)
-        : existingMedication.assignment,
     });
 
     return this.medicationRepository.save(existingMedication);

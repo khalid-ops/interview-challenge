@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   forwardRef,
   Inject,
   Injectable,
@@ -11,7 +12,7 @@ import { CreateAssignmentDto } from '../dtos/create-assignment.dto';
 import { PatientService } from './patient.service';
 import { Medication } from '../entities/medication.entity';
 import { UpdateAssignmentDto } from '../dtos/update-assignment.dto';
-import { addDays, differenceInCalendarDays } from 'date-fns';
+import { addDays, differenceInCalendarDays, isAfter, isBefore } from 'date-fns';
 
 @Injectable()
 export class AssignmentService {
@@ -28,6 +29,7 @@ export class AssignmentService {
     const data = await this.assignmentRepository.find({
       relations: ['patient', 'medications'],
     });
+
     return Promise.all(
       data.map(async (assignment) => {
         return {
@@ -76,7 +78,13 @@ export class AssignmentService {
     const today = new Date();
     const endDate = addDays(assignment.startDate, assignment.numberOfDays);
     const remainingDays = differenceInCalendarDays(endDate, today);
-    return remainingDays;
+
+    if (isAfter(assignment.startDate, today)) {
+      return (
+        remainingDays - differenceInCalendarDays(assignment.startDate, today)
+      );
+    }
+    return remainingDays > 0 ? remainingDays : 0;
   }
 
   async create(assignmentData: CreateAssignmentDto): Promise<Assignment> {
@@ -84,6 +92,10 @@ export class AssignmentService {
       ...assignmentData,
       startDate: new Date(assignmentData.startDate),
     });
+
+    if (isBefore(new Date(assignment.startDate), new Date())) {
+      throw new BadRequestException('Start date cannot be in the past');
+    }
     if (assignmentData.patientId) {
       assignment.patient = await this.patientService.findOne(
         assignmentData.patientId,

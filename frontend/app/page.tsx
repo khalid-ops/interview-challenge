@@ -6,6 +6,8 @@ import * as React from "react"
 import { API_BASE_URL } from "./api"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Assignment } from "./assignments/page"
+import PatientUpsertForm from "@/components/patient-upsert-form"
+import { toast } from "sonner"
 
 export type Patient = {
     id: number;
@@ -18,23 +20,45 @@ export type Patient = {
 export default function Page() {
 
     const [patients, setPatients] = React.useState<Patient[]>([]);
+
+    const [isPatientFormOpen, setIsPatientFormOpen] = React.useState(false);
+    const [formMode, setFormMode] = React.useState<"create" | "update">("create");
+    const [patientId, setPatientId] = React.useState<number | null>(null);
+    const deletePatient = async (id: number) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/patients/delete/${id}`, {
+                method: 'DELETE',
+            });
+            if (response.ok) {
+                toast.success('Patient deleted successfully');
+                fetchPatients();
+            } else {
+                toast.error('Failed to delete patient');
+            }
+        } catch (error) {
+            toast.error(`Failed to delete patient: ${error}`);
+        }
+    };
     const fetchPatients = async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/patients/with-treatment-details`);
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                toast.error('Network response was not ok');
             }
             const data = await response.json();
             setPatients(data);
         } catch (error) {
-            console.error('Failed to fetch patients:', error);
+            toast.error(`Failed to fetch patients: ${error}`);
         }
     };
 
     React.useEffect(() => {
         fetchPatients();
     }, []);
+
+
   return (
+    <>
     <div className="container mx-auto p-2">
         <div className="flex justify-between p-2 rounded-md bg-amber-100 border border-amber-300 mb-2 gap-4 items-center">
             <div className="flex items-center gap-2">
@@ -42,20 +66,26 @@ export default function Page() {
                 <Users />
             </div>
             <div className="flex items-center gap-2 mr-2">
-                <Button className="cursor-pointer"><Plus />Add Patient</Button>
+                <Button className="cursor-pointer" onClick={() => {setIsPatientFormOpen(true); setFormMode("create"); setPatientId(null);}}><Plus />Add Patient</Button>
             </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2 overflow-auto">
             {patients.map((patient) => (
                 <Card className="w-full max-w-sm hover:shadow-lg" key={patient.id}>
                     <CardHeader>
                         <CardTitle>Name: {patient.name}</CardTitle>
                         <CardDescription>DOB: {new Date(patient.dateOfBirth).toLocaleDateString()}</CardDescription>
                         <CardAction className="flex justify-end gap-2 ml-2">
-                            <Button size={'icon'} >
+                            <Button size={'icon'} onClick={() => {
+                                setFormMode("update");
+                                setPatientId(patient.id);
+                                setIsPatientFormOpen(true);
+                            }} className="cursor-pointer">
                                 <Edit />
                             </Button>
-                            <Button size={'icon'} variant={"destructive"}>
+                            <Button size={'icon'} variant={"destructive"}
+                                onClick={() => deletePatient(patient.id)}
+                                className="cursor-pointer">
                                 <Trash2Icon />
                             </Button>
                         </CardAction>
@@ -92,6 +122,8 @@ export default function Page() {
             ))}
         </div>
     </div>
+    <PatientUpsertForm open={isPatientFormOpen} onOpenChange={setIsPatientFormOpen} mode={formMode} id={patientId!} onSubmit={fetchPatients}/>
+    </>
   )
 }
 

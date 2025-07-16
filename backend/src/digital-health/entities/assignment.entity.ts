@@ -3,8 +3,9 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -22,11 +23,19 @@ export class Assignment {
   @Column()
   numberOfDays: number;
 
-  @OneToMany(() => Medication, (medication) => medication.assignment)
+  @ManyToMany(() => Medication, (medication) => medication.assignments, {
+    cascade: true,
+  })
+  @JoinTable({
+    name: 'assignment_medications',
+    joinColumn: { name: 'assignment_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'medication_id', referencedColumnName: 'id' },
+  })
   medications: Medication[];
 
   @ManyToOne(() => Patient, (patient) => patient.assignments, {
     nullable: true,
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'patientId' })
   patient: Patient;

@@ -9,11 +9,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { API_BASE_URL } from "@/app/api";
 import React from "react";
-import { Patient } from "@/app/page";
 import { toast } from "sonner";
+import { Medication } from "@/app/medications/page";
 
 
-interface PatientUpsertFormProps {
+interface MedicationUpsertFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title?: string
@@ -26,30 +26,33 @@ interface PatientUpsertFormProps {
  
 const FormSchema = z.object({
   name: z.string({
-    message: "Patient name is required",
+    message: "Medication name is required",
   }),
-  dateOfBirth: z.string({
-    message: "Date of birth is required",
+  dosage: z.string({
+    message: "Dosage is required",
+  }),
+  frequency: z.string({
+    message: "Frequency is required",
   }),
 })
 
 type FormValues = z.infer<typeof FormSchema>;
 
-export default function PatientUpsertForm({open, onOpenChange, onSubmit, id, mode}: PatientUpsertFormProps)  {
+export default function MedicationUpsertForm({open, onOpenChange, onSubmit, id, mode}: MedicationUpsertFormProps)  {
     const form = useForm<FormValues>({
       resolver: zodResolver(FormSchema),
     });
 
-  const PatientRecord = async () => {
+  const MedicationRecord = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/patients/${id}`);
+      const response = await fetch(`${API_BASE_URL}/medications/${id}`);
       if (!response.ok) {
         toast.error('Network response was not ok');
       }
       const data = await response.json();
-      return data as Patient;
+      return data as Medication;
     } catch (error) {
-      toast.error('Failed to fetch patient:' + error);
+      toast.error('Failed to fetch medication:' + error);
       return null;
     }
   };
@@ -57,7 +60,7 @@ export default function PatientUpsertForm({open, onOpenChange, onSubmit, id, mod
   const handleSubmit = async (data: FormValues) => {
     try {
       if (mode === "create") {
-        const response = await fetch(`${API_BASE_URL}/patients/create`, {
+        const response = await fetch(`${API_BASE_URL}/medications/create`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -65,12 +68,12 @@ export default function PatientUpsertForm({open, onOpenChange, onSubmit, id, mod
           body: JSON.stringify(data),
         });
         if (response.ok) {
-          toast.success('Patient created successfully');
+          toast.success('Medication created successfully');
         } else {
-          toast.error('Failed to create patient');
+          toast.error('Failed to create medication');
         }
       } else if (mode === "update" && id !== null) {
-        const response = await fetch(`${API_BASE_URL}/patients/update/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/medications/update/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -78,16 +81,16 @@ export default function PatientUpsertForm({open, onOpenChange, onSubmit, id, mod
           body: JSON.stringify(data),
         });
         if (response.ok) {
-          toast.success('Patient updated successfully');
+          toast.success('Medication updated successfully');
         } else {
-          toast.error('Failed to update patient');
+          toast.error('Failed to update medication');
         }
       }
       onOpenChange(false);
       form.reset();
       onSubmit?.();
     } catch (error) {
-      toast.error(`Failed to ${mode === "create" ? "create" : "update"} patient: ${error}`);
+      toast.error(`Failed to ${mode === "create" ? "create" : "update"} medication: ${error}`);
     }
   };
 
@@ -100,26 +103,27 @@ export default function PatientUpsertForm({open, onOpenChange, onSubmit, id, mod
       form.reset();
       return;
     }
-    const fetchAndSetPatient = async () => {
+    const fetchAndSetMedication = async () => {
       if (id !== null && mode === "update") {
         form.reset();
-        const existingPatient = await PatientRecord();
-        if (existingPatient) {
-          form.setValue("name", existingPatient.name);
-          form.setValue("dateOfBirth", existingPatient.dateOfBirth);
+        const existingMedication = await MedicationRecord();
+        if (existingMedication) {
+          form.setValue("name", existingMedication.name);
+          form.setValue("dosage", existingMedication.dosage);
+          form.setValue("frequency", existingMedication.frequency);
         }
       }
     };
 
-    fetchAndSetPatient();
+    fetchAndSetMedication();
   }, [id, mode, form]);
 
     return(
         <Dialog open={open} onOpenChange={onOpenChange}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>{mode === "update" ? "Update Patient" : "Add Patient"}</DialogTitle>
-              <DialogDescription>{"Fill in the form below to " + mode + " a patient"}</DialogDescription>
+              <DialogTitle>{mode === "update" ? "Update Medication" : "Add Medication"}</DialogTitle>
+              <DialogDescription>{"Fill in the form below to " + mode + " a medication"}</DialogDescription>
             </DialogHeader>
 
             <Form {...form}>
@@ -137,7 +141,7 @@ export default function PatientUpsertForm({open, onOpenChange, onSubmit, id, mod
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input defaultValue={field.value} onChange={(e) => field.onChange(e.target.value)} placeholder="Enter patient name" />
+                        <Input defaultValue={field.value} onChange={(e) => field.onChange(e.target.value)} placeholder="Enter medication name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -148,12 +152,27 @@ export default function PatientUpsertForm({open, onOpenChange, onSubmit, id, mod
                 <div className="space-y-2">
                   <FormField 
                   control={form.control} 
-                  name="dateOfBirth"
+                  name="dosage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date of Birth</FormLabel>
+                      <FormLabel>Dosage</FormLabel>
                       <FormControl>
-                        <Input type="date" defaultValue={field.value} onChange={(e) => field.onChange(e.target.value)} />
+                        <Input defaultValue={field.value} onChange={(e) => field.onChange(e.target.value)} placeholder="Enter medication dosage" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FormField 
+                  control={form.control} 
+                  name="frequency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Frequency</FormLabel>
+                      <FormControl>
+                        <Input defaultValue={field.value} onChange={(e) => field.onChange(e.target.value)} placeholder="Enter medication frequency" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

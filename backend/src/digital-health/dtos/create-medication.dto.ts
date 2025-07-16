@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateMedicationDto {
   @IsString()
@@ -12,8 +12,4 @@ export class CreateMedicationDto {
   @IsString()
   @IsNotEmpty()
   frequency: string;
-
-  @IsNumber()
-  @IsOptional()
-  assignmentId?: number;
 }

@@ -2,8 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -23,11 +22,10 @@ export class Medication {
   @Column()
   frequency: string;
 
-  @ManyToOne(() => Assignment, (assignment) => assignment.medications, {
-    nullable: true,
+  @ManyToMany(() => Assignment, (assignment) => assignment.medications, {
+    onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'assignmentId' })
-  assignment: Assignment;
+  assignments: Assignment[];
 
   @CreateDateColumn()
   createdAt: Date;
