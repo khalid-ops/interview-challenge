@@ -1,6 +1,6 @@
 'use client';
 
-import { LifeBuoyIcon, Plus } from "lucide-react";
+import { LifeBuoyIcon, Plus, Trash2Icon } from "lucide-react";
 import { Medication } from "../medications/page";
 import { Patient } from "../page";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,22 @@ export default function Page() {
     React.useEffect(() => {
         fetchAssignments();
     }, []);
+
+    const handleDeleteAssignment = async (id: number) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/assignments/delete/${id}`, {
+                method: 'DELETE',
+            });
+            if (response.ok) {
+                toast.success('Assignment deleted successfully');
+                fetchAssignments();
+            } else {
+                toast.error('Failed to delete assignment');
+            }
+        } catch (error) {
+            toast.error('Failed to delete assignment: ' + error);
+        }
+    };
     return (
     <>
     <div className="container mx-auto p-2">
@@ -58,6 +74,7 @@ export default function Page() {
                         <th className="p-2 text-left">Patient</th>
                         <th className="p-2 text-left">Medications</th>
                         <th className="p-2 text-left">Days Left</th>
+                        <th className="p-2 text-left">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -67,6 +84,9 @@ export default function Page() {
                             <td className="p-2">{assignment.patient.name}</td>
                             <td className="p-2">{assignment.medications.map(med => med.name).join(", ")}</td>
                             <td className="p-2"><span className="text-2xl font-bold rounded-md bg-green-100 px-2 border border-green-300">{assignment.treatmentDaysLeft} days</span></td>
+                            <td className="p-2">
+                                <Button variant="destructive" className="ml-2" size="icon" onClick={() => handleDeleteAssignment(assignment.id)}><Trash2Icon/></Button>
+                            </td>
                         </tr>
                     ))}
                 </tbody>

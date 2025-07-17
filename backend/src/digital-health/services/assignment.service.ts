@@ -53,23 +53,6 @@ export class AssignmentService {
     return assignment;
   }
 
-  async getByPatientId(patientId: number): Promise<Assignment[]> {
-    const assignments = await this.assignmentRepository.find({
-      where: { patient: { id: patientId } },
-      relations: ['patient', 'medications'],
-    });
-    return Promise.all(
-      assignments.map(async (assignment) => {
-        return {
-          ...assignment,
-          treatmentDaysLeft: await this.getRemainingTreatmentDays(
-            assignment.id,
-          ),
-        };
-      }),
-    );
-  }
-
   async getRemainingTreatmentDays(id: number): Promise<number> {
     const assignment = await this.findOne(id);
     if (!assignment) {
@@ -80,9 +63,7 @@ export class AssignmentService {
     const remainingDays = differenceInCalendarDays(endDate, today);
 
     if (isAfter(assignment.startDate, today)) {
-      return (
-        remainingDays - differenceInCalendarDays(assignment.startDate, today)
-      );
+      return assignment.numberOfDays;
     }
     return remainingDays > 0 ? remainingDays : 0;
   }

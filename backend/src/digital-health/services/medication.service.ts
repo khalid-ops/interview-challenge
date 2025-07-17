@@ -4,14 +4,12 @@ import { Medication } from '../entities/medication.entity';
 import { Repository } from 'typeorm';
 import { CreateMedicationDto } from '../dtos/create-medication.dto';
 import { UpdateMedicationDto } from '../dtos/update-medication.dto';
-import { AssignmentService } from './assignment.service';
 
 @Injectable()
 export class MedicationService {
   constructor(
     @InjectRepository(Medication)
     private medicationRepository: Repository<Medication>,
-    private assignmentService: AssignmentService, // Assuming you have an AssignmentService to handle assignments
   ) {}
 
   async findAll(): Promise<Medication[]> {

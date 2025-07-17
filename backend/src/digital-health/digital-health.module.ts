@@ -14,5 +14,6 @@ import { MedicationController } from './controllers/medication.controller';
   imports: [TypeOrmModule.forFeature([Assignment, Medication, Patient])],
   controllers: [AssignmentController, MedicationController, PatientController],
   providers: [AssignmentService, MedicationService, PatientService],
+  exports: [AssignmentService, MedicationService, PatientService],
 })
 export class DigitalHealthModule {}

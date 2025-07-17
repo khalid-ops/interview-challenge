@@ -35,7 +35,7 @@ export class Assignment {
 
   @ManyToOne(() => Patient, (patient) => patient.assignments, {
     nullable: true,
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'patientId' })
   patient: Patient;

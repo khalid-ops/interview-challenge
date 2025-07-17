@@ -25,11 +25,6 @@ export class AssignmentController {
     return this.assignmentService.findOne(id);
   }
 
-  @Get('by-patient/:id')
-  async getByPatientId(@Param('id') patientId: number) {
-    return this.assignmentService.getByPatientId(patientId);
-  }
-
   @Get('remaining-treatment-days/:id')
   async getRemainingTreatmentDays(@Param('id') id: number) {
     return this.assignmentService.getRemainingTreatmentDays(id);
